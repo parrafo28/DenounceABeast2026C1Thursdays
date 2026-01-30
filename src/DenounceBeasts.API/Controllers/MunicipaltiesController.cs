@@ -102,8 +102,7 @@ namespace DenounceBeasts.API.Controllers
             existing.PostalCode = municipality.PostalCode;
             existing.IsActive = municipality.IsActive;
             // Retornar 204 NoContent indicando que se realizó la operación sin devolver cuerpo.
-            //return NoContent();
-            return Ok(existing);
+            return NoContent();
         }
 
         [HttpDelete("{id}")] // DELETE: api/municipalities/5
