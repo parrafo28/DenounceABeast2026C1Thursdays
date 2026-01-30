@@ -52,11 +52,29 @@ namespace DenounceBeasts.API.Controllers
         public ActionResult<IEnumerable<Municipality>> GetAll()
         {
             // Retornamos 200 OK con la lista completa.
-            return Ok(_municipalities);
+
+            var response = _municipalities.Select(m => new MunicipalityDto
+            {
+                Id = m.Id,
+                Name = m.Name,
+                PostalCode = m.PostalCode,
+                IsActive = m.IsActive
+            }).ToList();
+
+            //var response2 = new List<MunicipalityDto>();
+
+            //foreach (var item in _municipalities)
+            //{
+            //    response2.Add(new MunicipalityDto { Id = item.Id, IsActive = item.IsActive, Name = item.Name, PostalCode = item.PostalCode });
+            //}
+
+            //return Ok(_municipalities);
+            return Ok(response);
+
         }
 
         [HttpGet("{id}")] // GET: api/municipalities/5
-        public ActionResult<Municipality> GetById(int id)
+        public IActionResult GetById(int id)
         {
             var municipality = _municipalities.FirstOrDefault(m => m.Id == id);
             if (municipality == null)
@@ -64,32 +82,48 @@ namespace DenounceBeasts.API.Controllers
                 // Retornar 404 si no se encontró
                 return NotFound();
             }
-            return Ok(municipality);
+            var response = new MunicipalityDto
+            {
+                Id = municipality.Id,
+                Name = municipality.Name,
+                PostalCode = municipality.PostalCode,
+                IsActive = municipality.IsActive
+            };
+            return Ok(response);
         }
         [HttpPost] // POST: api/municipalities
-        public ActionResult<Municipality> Create(Municipality municipality)
+        public IActionResult Create(MunicipalityDto request)
         {
             // Validación manual adicional: nombre no vacío (alternativa a [Required]).
-            if (string.IsNullOrWhiteSpace(municipality.Name))
+            if (string.IsNullOrWhiteSpace(request.Name))
             {
                 return BadRequest("Name of municipality is required.");
             }
             int newId = _municipalities.Any() ? _municipalities.Max(m => m.Id) + 1 : 1;
-            municipality.Id = newId;
-                      municipality.IsActive = true;
-           
+            //request.Id = newId;
+            //          request.IsActive = true;
+
+            var municipality = new Municipality
+            {
+                Id = newId,
+                Name = request.Name,
+                PostalCode = request.PostalCode,
+                IsActive = true
+            };
+
             _municipalities.Add(municipality);
+            //_municipalities.Add(request);
             // Devolver respuesta 201 Created con el recurso creado
             return CreatedAtAction(
                 nameof(GetById),              // Nombre de la acción para generar el link de detalle
                 new { id = municipality.Id }, // Valores de ruta (el id del nuevo recurso)
-                municipality                  // El objeto creado (en el cuerpo de la respuesta)
+                request                  // El objeto creado (en el cuerpo de la respuesta)
             );
            // return Ok(new { Id = municipality.Id });
         }
 
         [HttpPut("{id}")] // PUT: api/municipalities/5
-        public IActionResult Update(int id, Municipality municipality)
+        public IActionResult Update(int id, MunicipalityDto request)
         {
             var existing = _municipalities.FirstOrDefault(m => m.Id == id);
             if (existing == null)
@@ -98,9 +132,9 @@ namespace DenounceBeasts.API.Controllers
             }
             // Opcional: validar que municipality.Id == id si quisiéramos forzar consistencia.
             // Actualizar propiedades (excepto el Id)
-            existing.Name = municipality.Name;
-            existing.PostalCode = municipality.PostalCode;
-            existing.IsActive = municipality.IsActive;
+            existing.Name = request.Name;
+            existing.PostalCode = request.PostalCode;
+            existing.IsActive = request.IsActive;
             // Retornar 204 NoContent indicando que se realizó la operación sin devolver cuerpo.
             return NoContent();
         }

@@ -9,9 +9,9 @@ namespace DenounceBeasts.API.Controllers
     {
         private static readonly List<Sector> _sectors = new List<Sector>
         {
-            new Sector { Id = 1, Name = "Santo Domingo", PostalCode = "10101", IsActive = true },
-            new Sector { Id = 2, Name = "Santiago de los Caballeros", PostalCode = "51000", IsActive = true },
-            new Sector { Id = 3, Name = "Puerto Plata", PostalCode = "57000", IsActive = true }
+            new Sector { Id = 1, Name = "Santo Domingo", PostalCode = "10101", IsActive = true, MunicipalityId=1 },
+            new Sector { Id = 2, Name = "Santiago de los Caballeros", PostalCode = "51000", IsActive = true, MunicipalityId=1 },
+            new Sector { Id = 3, Name = "Puerto Plata", PostalCode = "57000", IsActive = true, MunicipalityId=2 }
         };
          
         [HttpGet] 
