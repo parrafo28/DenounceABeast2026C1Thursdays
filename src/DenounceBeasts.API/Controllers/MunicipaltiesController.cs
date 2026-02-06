@@ -1,59 +1,28 @@
-﻿using DenounceBeasts.API.Models;
+﻿using DenounceBeasts.API.Data;
+using DenounceBeasts.API.Models;
+using DenounceBeasts.API.Models.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DenounceBeasts.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class MunicipaltiesController: ControllerBase
+    public class MunicipaltiesController : ControllerBase
     {
-        private static readonly List<Municipality> _municipalities = new List<Municipality>
+
+        private readonly ApplicationDataContext _context;
+
+        public MunicipaltiesController(ApplicationDataContext context)
         {
-            new Municipality { Id = 1, Name = "Santo Domingo", PostalCode = "10101", IsActive = true },
-            new Municipality { Id = 2, Name = "Santiago de los Caballeros", PostalCode = "51000", IsActive = true },
-            new Municipality { Id = 3, Name = "Puerto Plata", PostalCode = "57000", IsActive = true }
-        };
-
-
-        //[HttpGet]
-        //public IActionResult Get()
-        //{
-        //    var municipalities = new List<Municipality>()
-        //    {
-        //        new Municipality { Id = 1, Name = "Springfield", PostalCode = "12345" },
-        //        new Municipality { Id = 2, Name = "Shelbyville", PostalCode = "67890" }
-        //    };
-        //    return Ok(municipalities);
-        //}
-
-        //[HttpGet("GetMunicipalities")]
-        // public IActionResult Getx()
-        // {
-        //     var municipalities = new List<Municipality>()
-        //     {
-        //         new Municipality { Id = 1, Name = "Springfield", PostalCode = "12345" },
-        //         new Municipality { Id = 2, Name = "Shelbyville", PostalCode = "67890" }
-        //     };
-        //     return Ok(municipalities);
-        // }
-
-        // [HttpGet("/api/GetMunicipalities")] 
-        // public IActionResult Getxx()
-        // {
-        //     var municipalities = new List<Municipality>()
-        //     {
-        //         new Municipality { Id = 1, Name = "Springfield", PostalCode = "12345" },
-        //         new Municipality { Id = 2, Name = "Shelbyville", PostalCode = "67890" }
-        //     };
-        //     return Ok(municipalities);
-        // }
-
-        [HttpGet] // GET: api/municipalities
-        public ActionResult<IEnumerable<Municipality>> GetAll()
+            _context = context;
+        }
+         
+        [HttpGet]
+        public ActionResult<IEnumerable<MunicipalityDto>> GetAll()
         {
-            // Retornamos 200 OK con la lista completa.
+            var municipalitiesFromDb = _context.Municipalities.ToList();
 
-            var response = _municipalities.Select(m => new MunicipalityDto
+            var response = municipalitiesFromDb.Select(m => new MunicipalityDto
             {
                 Id = m.Id,
                 Name = m.Name,
@@ -61,25 +30,42 @@ namespace DenounceBeasts.API.Controllers
                 IsActive = m.IsActive
             }).ToList();
 
-            //var response2 = new List<MunicipalityDto>();
-
-            //foreach (var item in _municipalities)
-            //{
-            //    response2.Add(new MunicipalityDto { Id = item.Id, IsActive = item.IsActive, Name = item.Name, PostalCode = item.PostalCode });
-            //}
-
-            //return Ok(_municipalities);
             return Ok(response);
 
         }
 
-        [HttpGet("{id}")] // GET: api/municipalities/5
+        [HttpGet("with-sectors")]
+        public IActionResult GetAllWithSectors()
+        {
+            var municipalitiesFromDb = _context.Municipalities.ToList();
+
+            var response = municipalitiesFromDb.Select(m => new MunicipalityListDto
+            {
+                Id = m.Id,
+                Name = m.Name,
+                PostalCode = m.PostalCode,
+                Sectors = _context.Sectors
+                    .Where(s => s.MunicipalityId == m.Id)
+                    .Select(s => new SectorDto
+                    {
+                        Id = s.Id,
+                        Name = s.Name,
+                        IsActive = s.IsActive
+                    }).ToList(),
+                IsActive = m.IsActive
+            }).ToList();
+
+            return Ok(response);
+
+        }
+
+        [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
-            var municipality = _municipalities.FirstOrDefault(m => m.Id == id);
+
+            var municipality = _context.Municipalities.FirstOrDefault(m => m.Id == id);
             if (municipality == null)
             {
-                // Retornar 404 si no se encontró
                 return NotFound();
             }
             var response = new MunicipalityDto
@@ -91,64 +77,58 @@ namespace DenounceBeasts.API.Controllers
             };
             return Ok(response);
         }
-        [HttpPost] // POST: api/municipalities
+        [HttpPost]
         public IActionResult Create(MunicipalityDto request)
         {
-            // Validación manual adicional: nombre no vacío (alternativa a [Required]).
             if (string.IsNullOrWhiteSpace(request.Name))
             {
                 return BadRequest("Name of municipality is required.");
             }
-            int newId = _municipalities.Any() ? _municipalities.Max(m => m.Id) + 1 : 1;
-            //request.Id = newId;
-            //          request.IsActive = true;
-
+            
             var municipality = new Municipality
-            {
-                Id = newId,
+            { 
                 Name = request.Name,
                 PostalCode = request.PostalCode,
                 IsActive = true
             };
 
-            _municipalities.Add(municipality);
-            //_municipalities.Add(request);
-            // Devolver respuesta 201 Created con el recurso creado
+            _context.Add(municipality);
+            _context.SaveChanges();
+
             return CreatedAtAction(
-                nameof(GetById),              // Nombre de la acción para generar el link de detalle
-                new { id = municipality.Id }, // Valores de ruta (el id del nuevo recurso)
-                request                  // El objeto creado (en el cuerpo de la respuesta)
+                nameof(GetById),
+                new { id = municipality.Id },
+                request
             );
-           // return Ok(new { Id = municipality.Id });
         }
 
-        [HttpPut("{id}")] // PUT: api/municipalities/5
+        [HttpPut("{id}")]
         public IActionResult Update(int id, MunicipalityDto request)
         {
-            var existing = _municipalities.FirstOrDefault(m => m.Id == id);
+            var existing = _context.Municipalities.FirstOrDefault(m => m.Id == id);
             if (existing == null)
             {
                 return NotFound();
             }
-            // Opcional: validar que municipality.Id == id si quisiéramos forzar consistencia.
-            // Actualizar propiedades (excepto el Id)
+
             existing.Name = request.Name;
             existing.PostalCode = request.PostalCode;
             existing.IsActive = request.IsActive;
-            // Retornar 204 NoContent indicando que se realizó la operación sin devolver cuerpo.
+            _context.Update(existing);
+            _context.SaveChanges();
             return NoContent();
         }
 
-        [HttpDelete("{id}")] // DELETE: api/municipalities/5
+        [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var existing = _municipalities.FirstOrDefault(m => m.Id == id);
+            var existing = _context.Municipalities.FirstOrDefault(m => m.Id == id);
             if (existing == null)
             {
                 return NotFound();
             }
-            _municipalities.Remove(existing);
-            // Retornamos 204 NoContent para indicar que se eliminó correctamente (sin contenido).
+            _context.Municipalities.Remove(existing);
+            _context.SaveChanges();
             return NoContent();
         }
 

@@ -1,18 +1,19 @@
+using DenounceBeasts.API.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 
-//var ironIcrKey = "jkashdakjhsdjkashdkjagskdgajksdgkajsgdjagsdjkagsd";
-//var ironOcr = builder.Configuration.GetSection("IronOcr");
-//builder.Services.AddIronIcr(ironIcrKey);
+builder.Services.AddDbContext<ApplicationDataContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DenounceBeastsDatabase")));
+ 
 
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddControllers(); 
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-
-// Configure the HTTP request pipeline.
+ 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

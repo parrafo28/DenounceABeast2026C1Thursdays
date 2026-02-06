@@ -1,13 +1,12 @@
-﻿namespace DenounceBeasts.API.Models
+﻿namespace DenounceBeasts.API.Models.Dtos
 {
-    public class Sector
+    public class MunicipalityListDto
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string PostalCode { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
+        public List<SectorDto> Sectors { get; set; } = new List<SectorDto>();
 
-        public int MunicipalityId { get; set; }
-        public Municipality Municipality { get; set; }
     }
 }
