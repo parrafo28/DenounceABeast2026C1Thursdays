@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DenounceBeasts.API.Data.Entities
 {
-     [Table("Sector")]
     public class Sector
     {
         [Key]

@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DenounceBeasts.API.Models
 {
-     [Table("Municipality")]
     public class Municipality
     {
         [Key]
@@ -18,5 +17,8 @@ namespace DenounceBeasts.API.Models
         public string PostalCode { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
         public List<Sector> Sectors { get; set; }
+
+        [NotMapped]
+        public string PropertyTest1 { get; set; }
     }
 }
